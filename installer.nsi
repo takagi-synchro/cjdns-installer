@@ -7,8 +7,19 @@
 !define MUI_UNWELCOMEFINISHPAGE_BITMAP "sidebar.bmp"
 
 !define PRODUCT_NAME "CJDNS for Windows"
-!define PRODUCT_VERSION "0.10-proto20.2"
-!define PRODUCT_PUBLISHER "Santa Cruz Meshnet Project"
+!define PRODUCT_VERSION "1.0.0-proto20.2-peer-synchro"
+!define PRODUCT_PUBLISHER "udc synchro"
+!define PRODUCT_DESCRIPT "cjdns binary is ver20.2. IPv4 peer infomation include udc-synchro"
+!define INSTALLER_VERSION "1.0.0.0"
+
+# takagi@udc-synchro.co.jp --->
+#!define genconf "genconf.cmd"
+!define genconf "genconf.vbs"
+#!define sh_peerconf "addPublicPeers.vbs"
+#!define peer_list "public_peers.txt"
+!define sh_peerconf "add_peers_to_conf.vbs"
+!define peer_list "add_peers_list.txt"
+# takagi@udc-synchro.co.jp <---
 
 # NSIS Dependencies
 # To build the installer:
@@ -30,6 +41,13 @@ InstallDir "$PROGRAMFILES\cjdns"
 
 # Get proper permissions for uninstalling in Windows 7
 RequestExecutionLevel admin
+
+VIProductVersion ${INSTALLER_VERSION}
+VIAddVersionKey ProductName "${PRODUCT_NAME}"
+VIAddVersionKey CompanyName "${PRODUCT_PUBLISHER}"
+VIAddVersionKey FileDescription "${PRODUCT_DESCRIPT}"
+VIAddVersionKey FileVersion ${INSTALLER_VERSION}
+VIAddVersionKey ProductVersion ${INSTALLER_VERSION}
 
 # Set up page order
 !insertmacro MUI_PAGE_WELCOME
@@ -95,7 +113,7 @@ Section "Install cjdns"
 	File "installation\publictoip6.exe"
 	File "installation\randombytes.exe"
 	File "installation\sybilsim.exe"
-	File "installation\genconf.cmd"
+	File "installation\${genconf}"
 	File "installation\logo.ico"
 
 	# create the uninstaller
@@ -142,20 +160,20 @@ Section "Install cjdns"
 	WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\cjdns" "UninstallString" "$\"$INSTDIR\uninstall.exe$\""
 SectionEnd
 
-Section "Add public peers when generating config"
-	# Be in the right directory
-	SetOutPath "$INSTDIR"
-
-	# Add these files
-	File "installation\public_peers.txt"
-	File "installation\addPublicPeers.vbs"
-SectionEnd
-
 Section "Generate cjdns configuration if needed"
 	# Be in the right directory
 	SetOutPath "$INSTDIR"
 	# Make cjdns config file if it doesn't exist
-	ExecWait "C:\Windows\System32\wscript.exe invisible.vbs genconf.cmd"
+	ExecWait "C:\Windows\System32\wscript.exe invisible.vbs ${genconf}"
+SectionEnd
+
+Section "Add peers when not exist in config"
+#	# Be in the right directory
+	SetOutPath "$INSTDIR"
+#	# Add these files
+	File "installation\${peer_list}"
+	File "installation\${sh_peerconf}"
+	ExecWait "C:\Windows\System32\wscript.exe invisible.vbs ${sh_peerconf}"
 SectionEnd
 
 Section "Install cjdns service"
@@ -182,7 +200,11 @@ Section "Install cjdns service"
 	Pop $0
 
 	# Install a normal service that the user manually starts
-	SimpleSC::InstallService "cjdns" "cjdns Mesh Network Router" "16" "3" "$INSTDIR\CjdnsService.exe" "" "" ""
+# takagi@udc-synchro.co.jp --->
+#	SimpleSC::InstallService "cjdns" "cjdns Mesh Network Router" "16" "3" "$INSTDIR\CjdnsService.exe" "" "" ""
+# *** NO EFFORT *** depend on "Network Store Interface Service": nsi 
+	SimpleSC::InstallService "cjdns" "cjdns Mesh Network Router" "16" "3" "$INSTDIR\CjdnsService.exe" "nsi" "" ""
+# takagi@udc-synchro.co.jp <---
 SectionEnd
 
 Section "Apply DNS patch"
@@ -198,7 +220,9 @@ SectionEnd
 Section "Start cjdns automatically"
 	# Set cjdns to start at boot, instead of manually
 	SimpleSC::SetServiceStartType "cjdns" "2"
-
+# takagi@udc-synchro.co.jp --->
+	SimpleSC::SetServiceDelayedAutoStartInfo "cjdns" "1"
+# takagi@udc-synchro.co.jp <---	
 	# And start it now
 	SimpleSC::StartService "cjdns" "" 30
 SectionEnd
@@ -210,16 +234,20 @@ Section "Restart cjdns on crash"
 	SimpleSC::SetServiceFailureFlag "cjdns" "1"
 SectionEnd
 
-Section "Display instructions"
-	# Send the user to our web page where we talk about how to actually use cjdns
-	ExecShell "open" "https://github.com/interfect/cjdns-installer/blob/master/Users%20Guide.md"
-SectionEnd
+#Section "Display instructions"
+#	# Send the user to our web page where we talk about how to actually use cjdns
+#	ExecShell "open" "https://github.com/interfect/cjdns-installer/blob/master/Users%20Guide.md"
+#SectionEnd
 
 Section "un.Uninstall cjdns"
 	# Things the uninstaller does
 
 	# Uninstall shell stuff for everyone
 	SetShellVarContext all
+
+# takagi@udc-synchro.co.jp --->
+	SimpleSC::SetServiceDelayedAutoStartInfo "cjdns" "0"
+# takagi@udc-synchro.co.jp <---	
 
 	# Stop the service
 	SimpleSC::StopService "cjdns" 1 30
@@ -257,7 +285,7 @@ Section "un.Uninstall cjdns"
 	Delete "$INSTDIR\publictoip6.exe"
 	Delete "$INSTDIR\randombytes.exe"
 	Delete "$INSTDIR\sybilsim.exe"
-	Delete "$INSTDIR\genconf.cmd"
+	Delete "$INSTDIR\${genconf}"
 	Delete "$INSTDIR\CjdnsService.exe"
 	Delete "$INSTDIR\restart.cmd"
 	Delete "$INSTDIR\stop.cmd"
@@ -266,8 +294,8 @@ Section "un.Uninstall cjdns"
 	Delete "$INSTDIR\edit_config.cmd"
 	Delete "$INSTDIR\dns_patch.cmd"
 	Delete "$INSTDIR\dns_unpatch.cmd"
-	Delete "$INSTDIR\public_peers.txt"
-	Delete "$INSTDIR\addPublicPeers.vbs"
+	Delete "$INSTDIR\${sh_peerconf}"
+	Delete "$INSTDIR\${peer_list}"
 	Delete "$INSTDIR\invisible.vbs"
 	Delete "$INSTDIR\logo.ico"
 
