@@ -139,10 +139,7 @@ Section "Install cjdns"
 	Pop $0
 
 	# And one to test connectivity
-# takagi@udc-synchro.co.jp --->
-#	CreateShortCut "$SMPROGRAMS\${PRODUCT_NAME}\Test cjdns connectivity.lnk" "ping" "/t fcec:ae97:8902:d810:6c92:ec67:efb2:3ec5" "$INSTDIR\logo.ico"
-	CreateShortCut "$SMPROGRAMS\${PRODUCT_NAME}\Test cjdns connectivity.lnk" "ping" "/t [fc67:44f2:6f7e:5a63:d8fe:5e25:ac32:3633]" "$INSTDIR\logo.ico"
-# takagi@udc-synchro.co.jp <---
+	CreateShortCut "$SMPROGRAMS\${PRODUCT_NAME}\Test cjdns connectivity.lnk" "ping" "/t fcec:ae97:8902:d810:6c92:ec67:efb2:3ec5" "$INSTDIR\logo.ico"
 
 	# Add tools to patch and unpatch DNS
 	# Basically spray static IPv6 addresses on all the interfaces so Firefox can browse by domain name.
