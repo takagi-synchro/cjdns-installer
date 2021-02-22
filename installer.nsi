@@ -7,7 +7,7 @@
 !define MUI_UNWELCOMEFINISHPAGE_BITMAP "sidebar.bmp"
 
 !define PRODUCT_NAME "CJDNS for Windows"
-!define PRODUCT_VERSION "1.0.0-proto20.2-peer-synchro"
+!define PRODUCT_VERSION "1.1.0-proto20.2-peer-synchro"
 !define PRODUCT_PUBLISHER "udc synchro"
 !define PRODUCT_DESCRIPT "cjdns binary is ver20.2. IPv4 peer infomation include udc-synchro"
 !define INSTALLER_VERSION "1.0.0.0"
@@ -139,7 +139,10 @@ Section "Install cjdns"
 	Pop $0
 
 	# And one to test connectivity
-	CreateShortCut "$SMPROGRAMS\${PRODUCT_NAME}\Test cjdns connectivity.lnk" "ping" "/t fcec:ae97:8902:d810:6c92:ec67:efb2:3ec5" "$INSTDIR\logo.ico"
+# takagi@udc-synchro.co.jp --->
+#	CreateShortCut "$SMPROGRAMS\${PRODUCT_NAME}\Test cjdns connectivity.lnk" "ping" "/t fcec:ae97:8902:d810:6c92:ec67:efb2:3ec5" "$INSTDIR\logo.ico"
+	CreateShortCut "$SMPROGRAMS\${PRODUCT_NAME}\Test cjdns connectivity.lnk" "ping" "/t [fc67:44f2:6f7e:5a63:d8fe:5e25:ac32:3633]" "$INSTDIR\logo.ico"
+# takagi@udc-synchro.co.jp <---
 
 	# Add tools to patch and unpatch DNS
 	# Basically spray static IPv6 addresses on all the interfaces so Firefox can browse by domain name.
@@ -152,7 +155,11 @@ Section "Install cjdns"
 	CreateShortCut "$SMPROGRAMS\${PRODUCT_NAME}\Revert DNS patch.lnk" "cmd.exe" "/k $\"cd $\"$\"$\"$INSTDIR$\"$\"$\" & dns_unpatch.cmd <NUL & exit$\"" "$INSTDIR\logo.ico"
 	ShellLink::SetRunAsAdministrator "$SMPROGRAMS\${PRODUCT_NAME}\Revert DNS patch.lnk"
 	Pop $0
-
+# takagi@udc-synchro.co.jp --->
+	File "installation\test_conn_to_mtm.cmd"
+	CreateShortCut "$SMPROGRAMS\${PRODUCT_NAME}\Test Connect to synchro-MatterMost.lnk" "$INSTDIR\test_conn_to_mtm.cmd"
+	Pop $0
+# takagi@udc-synchro.co.jp <---
 	# Register with add/remove programs
 	WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\cjdns" "DisplayName" "${PRODUCT_NAME}"
 	WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\cjdns" "Publisher" "${PRODUCT_PUBLISHER}"
@@ -182,6 +189,10 @@ Section "Install cjdns service"
 
 	# Copy the service files
 	File "installation\CjdnsService.exe"
+# takagi@udc-synchro.co.jp --->
+# change software requirements. .NetFramework 3.5 -> 4.0
+	File "installation\CjdnsService.exe.config"
+# takagi@udc-synchro.co.jp <---
 	File "installation\restart.cmd"
 	File "installation\stop.cmd"
 	File "installation\start.cmd"
@@ -198,7 +209,11 @@ Section "Install cjdns service"
 	CreateShortCut "$SMPROGRAMS\${PRODUCT_NAME}\Start cjdns.lnk" "$INSTDIR\start.cmd" "" "$INSTDIR\logo.ico"
 	ShellLink::SetRunAsAdministrator "$SMPROGRAMS\${PRODUCT_NAME}\Start cjdns.lnk"
 	Pop $0
-
+# takagi@udc-synchro.co.jp --->
+    File "installation\test_conn_to_mtm.cmd"
+	CreateShortCut "$SMPROGRAMS\${PRODUCT_NAME}\Test Connect to synchro-MatterMost.lnk" "$INSTDIR\test_conn_to_mtm.cmd"
+	Pop $0
+# takagi@udc-synchro.co.jp <---
 	# Install a normal service that the user manually starts
 # takagi@udc-synchro.co.jp --->
 #	SimpleSC::InstallService "cjdns" "cjdns Mesh Network Router" "16" "3" "$INSTDIR\CjdnsService.exe" "" "" ""
@@ -273,7 +288,9 @@ Section "un.Uninstall cjdns"
 	Delete "$SMPROGRAMS\${PRODUCT_NAME}\Test cjdns connectivity.lnk"
 	Delete "$SMPROGRAMS\${PRODUCT_NAME}\Apply DNS patch.lnk"
 	Delete "$SMPROGRAMS\${PRODUCT_NAME}\Revert DNS patch.lnk"
-
+# takagi@udc-synchro.co.jp --->
+	Delete "$SMPROGRAMS\${PRODUCT_NAME}\Test Connect to synchro-MatterMost.lnk"
+# takagi@udc-synchro.co.jp <---
 	# Delete the start menu folder
 	RMDir "$SMPROGRAMS\${PRODUCT_NAME}"
 
@@ -287,6 +304,9 @@ Section "un.Uninstall cjdns"
 	Delete "$INSTDIR\sybilsim.exe"
 	Delete "$INSTDIR\${genconf}"
 	Delete "$INSTDIR\CjdnsService.exe"
+# takagi@udc-synchro.co.jp --->
+	Delete "$INSTDIR\CjdnsService.exe.config"
+# takagi@udc-synchro.co.jp <---	
 	Delete "$INSTDIR\restart.cmd"
 	Delete "$INSTDIR\stop.cmd"
 	Delete "$INSTDIR\start.cmd"
